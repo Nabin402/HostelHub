@@ -1,0 +1,252 @@
+<!-- templates/accounts/profile.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - HostelHub{% endblock %}
+
+{% block content %}
+
+<!-- Breadcrumb -->
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}" class="text-warning text-decoration-none">Home</a></li>
+        <li class="breadcrumb-item active text-secondary">My Profile</li>
+    </ol>
+</nav>
+
+<div class="row g-4">
+
+    <!-- Left Column: Profile Card -->
+    <div class="col-lg-4">
+
+        <!-- Profile Info Card -->
+        <div class="card border-0 rounded-4 p-4 text-center mb-4" style="background:#1a1a1a;">
+
+            <!-- Profile Picture -->
+            <div class="position-relative d-inline-block mx-auto mb-3">
+                {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" class="rounded-circle border border-warning border-3"
+                    width="110" height="110" style="object-fit:cover;">
+                {% else %}
+                <div class="rounded-circle border border-warning border-3 d-flex align-items-center justify-content-center mx-auto"
+                    style="width:110px;height:110px;background:#2a2a2a;">
+                    <span class="fw-bold text-warning" style="font-size:2.2rem;">
+                        {{ user.username|first|upper }}
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Upload Photo -->
+            <form method="POST" enctype="multipart/form-data" class="mb-3">
+                {% csrf_token %}
+                <label class="btn btn-sm btn-outline-warning rounded-pill px-3" for="pictureUpload">
+                    <i class="bi bi-camera"></i> Change Photo
+                </label>
+                <input type="file" id="pictureUpload" name="profile_picture" class="d-none" accept="image/*"
+                    onchange="this.form.submit()">
+            </form>
+
+            <!-- Username & Role -->
+            <h4 class="fw-bold text-white mb-1">{{ user.username }}</h4>
+            {% if user.role == 'student' %}
+            <span class="badge rounded-pill px-3 py-2 mb-3" style="background:#1d4ed8;">
+                <i class="bi bi-mortarboard"></i> Student
+            </span>
+            {% elif user.role == 'owner' %}
+            <span class="badge rounded-pill bg-warning text-dark px-3 py-2 mb-3">
+                <i class="bi bi-building"></i> Hostel Owner
+            </span>
+            {% else %}
+            <span class="badge rounded-pill bg-danger px-3 py-2 mb-3">
+                <i class="bi bi-shield-check"></i> Admin
+            </span>
+            {% endif %}
+
+            <!-- Divider -->
+            <hr style="border-color:#2d2d2d;">
+
+            <!-- Contact Info -->
+            <div class="text-start">
+                <p class="text-secondary mb-2">
+                    <i class="bi bi-envelope text-warning me-2"></i>
+                    <span class="text-white small">{{ user.email }}</span>
+                </p>
+                <p class="text-secondary mb-2">
+                    <i class="bi bi-telephone text-warning me-2"></i>
+                    <span class="text-white small">
+                        {% if user.phone %}{{ user.phone }}{% else %}Not provided{% endif %}
+                    </span>
+                </p>
+                <p class="text-secondary mb-2">
+                    <i class="bi bi-geo-alt text-warning me-2"></i>
+                    <span class="text-white small">
+                        {% if user.address %}{{ user.address }}{% else %}Not provided{% endif %}
+                    </span>
+                </p>
+                <p class="text-secondary mb-0">
+                    <i class="bi bi-calendar text-warning me-2"></i>
+                    <span class="text-white small">Joined {{ user.date_joined|date:"M Y" }}</span>
+                </p>
+            </div>
+
+            <!-- Divider -->
+            <hr style="border-color:#2d2d2d;">
+
+            <!-- Email Verified Badge -->
+            {% if user.is_email_verified %}
+            <p class="mb-0">
+                <i class="bi bi-patch-check-fill text-warning"></i>
+                <span class="text-white small">Email Verified</span>
+            </p>
+            {% else %}
+            <p class="mb-0">
+                <i class="bi bi-patch-exclamation-fill text-danger"></i>
+                <span class="text-danger small">Email Not Verified</span>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- Change Password Card -->
+        <div class="card border-0 rounded-4 p-4" style="background:#1a1a1a;">
+            <h6 class="fw-bold text-white mb-1">
+                <i class="bi bi-shield-lock text-warning me-2"></i> Account Security
+            </h6>
+            <p class="text-secondary small mb-3">Keep your account secure by updating your password regularly.</p>
+            <a href="{% url 'change_password' %}" class="btn btn-outline-warning rounded-pill w-100">
+                <i class="bi bi-key"></i> Change Password
+            </a>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Edit Form -->
+    <div class="col-lg-8">
+
+        <!-- Edit Profile Form -->
+        <div class="card border-0 rounded-4 p-4 mb-4" style="background:#1a1a1a;">
+
+            <div class="d-flex align-items-center mb-4">
+                <div style="width:4px;height:24px;background:#f59e0b;border-radius:2px;" class="me-3"></div>
+                <h5 class="fw-bold text-white mb-0">Personal Information</h5>
+            </div>
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                <!-- First & Last Name -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">First Name</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}"
+                            class="form-control rounded-3"
+                            style="background:#2a2a2a;border:1px solid #3d3d3d;color:#fff;"
+                            placeholder="Enter first name">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-secondary small fw-semibold">Last Name</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" class="form-control rounded-3"
+                            style="background:#2a2a2a;border:1px solid #3d3d3d;color:#fff;"
+                            placeholder="Enter last name">
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:#2a2a2a;border-color:#3d3d3d;">
+                            <i class="bi bi-envelope text-warning"></i>
+                        </span>
+                        <input type="email" name="email" value="{{ user.email }}" class="form-control rounded-end-3"
+                            style="background:#2a2a2a;border:1px solid #3d3d3d;color:#fff;" placeholder="Enter email">
+                    </div>
+                </div>
+
+                <!-- Phone -->
+                <div class="mb-3">
+                    <label class="form-label text-secondary small fw-semibold">Phone Number</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:#2a2a2a;border-color:#3d3d3d;">
+                            <i class="bi bi-telephone text-warning"></i>
+                        </span>
+                        <input type="text" name="phone" value="{{ user.phone }}" class="form-control rounded-end-3"
+                            style="background:#2a2a2a;border:1px solid #3d3d3d;color:#fff;"
+                            placeholder="Enter phone number">
+                    </div>
+                </div>
+
+                <!-- Address -->
+                <div class="mb-4">
+                    <label class="form-label text-secondary small fw-semibold">Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:#2a2a2a;border-color:#3d3d3d;">
+                            <i class="bi bi-geo-alt text-warning"></i>
+                        </span>
+                        <textarea name="address" rows="3" class="form-control rounded-end-3"
+                            style="background:#2a2a2a;border:1px solid #3d3d3d;color:#fff;"
+                            placeholder="Enter your address">{{ user.address }}</textarea>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-warning fw-semibold rounded-pill px-5 w-100" style="color:#000;">
+                    <i class="bi bi-check-circle me-2"></i> Save Changes
+                </button>
+            </form>
+        </div>
+
+        <!-- Role Specific Info -->
+        {% if user.role == 'owner' %}
+        <div class="card border-0 rounded-4 p-4" style="background:#1a1a1a;border-left:4px solid #f59e0b !important;">
+            <div class="d-flex align-items-center mb-3">
+                <div style="width:4px;height:24px;background:#f59e0b;border-radius:2px;" class="me-3"></div>
+                <h5 class="fw-bold text-white mb-0">Owner Actions</h5>
+            </div>
+            <p class="text-secondary small mb-3">Manage your hostel listings and booking requests.</p>
+            <div class="d-flex gap-3">
+                <a href="#" class="btn btn-warning rounded-pill px-4 fw-semibold" style="color:#000;">
+                    <i class="bi bi-plus-circle me-2"></i> Add New Hostel
+                </a>
+                <a href="#" class="btn btn-outline-warning rounded-pill px-4">
+                    <i class="bi bi-speedometer2 me-2"></i> My Dashboard
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user.role == 'student' %}
+        <div class="card border-0 rounded-4 p-4" style="background:#1a1a1a;">
+            <div class="d-flex align-items-center mb-3">
+                <div style="width:4px;height:24px;background:#f59e0b;border-radius:2px;" class="me-3"></div>
+                <h5 class="fw-bold text-white mb-0">My Activity</h5>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="rounded-3 p-3 text-center" style="background:#2a2a2a;">
+                        <i class="bi bi-heart text-warning fs-4"></i>
+                        <p class="text-white fw-bold mb-0 mt-1">0</p>
+                        <p class="text-secondary small mb-0">Saved Hostels</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="rounded-3 p-3 text-center" style="background:#2a2a2a;">
+                        <i class="bi bi-send text-warning fs-4"></i>
+                        <p class="text-white fw-bold mb-0 mt-1">0</p>
+                        <p class="text-secondary small mb-0">Booking Requests</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="rounded-3 p-3 text-center" style="background:#2a2a2a;">
+                        <i class="bi bi-check-circle text-warning fs-4"></i>
+                        <p class="text-white fw-bold mb-0 mt-1">0</p>
+                        <p class="text-secondary small mb-0">Approved Bookings</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}

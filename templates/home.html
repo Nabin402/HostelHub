@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}HostelHub - Find Your Perfect Student Hostel{% endblock %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="home-hero">
+    <div class="hero-content">
+
+        <p class="eyebrow">Nepal's #1 Student Hostel Platform</p>
+
+        <h1>Find Your Home<br>Away From Home</h1>
+
+        <p class="hero-subtitle">
+            Browse verified hostels across Nepal. Filter by location,
+            price and amenities — connect directly with owners, zero commission.
+        </p>
+
+        <!-- Search Bar -->
+        <form method="GET" action="{% url 'home' %}">
+            <div class="hero-search">
+                <label>
+                    <span>Location</span>
+                    <input type="text" name="location" placeholder="City or area e.g. Kathmandu"
+                        value="{{ request.GET.location }}">
+                </label>
+                <label>
+                    <span>Hostel Type</span>
+
+
+                    <select name="hostel_type">
+                        <option value="">Any Type</option>
+                        <option value="boys">Boys</option>
+                        <option value="girls">Girls</option>
+                        <option value="mixed">Mixed</option>
+                    </select>
+                </label>
+                <label>
+                    <span>Max Price (NPR)</span>
+                    <input type="number" name="max_price" placeholder="e.g. 5000" value="{{ request.GET.max_price }}">
+                </label>
+                <button type="submit">
+                    <i class="bi bi-search"></i> Search
+                </button>
+            </div>
+        </form>
+
+        <!-- Student Check -->
+        <label class="booking-student-check">
+            <input type="checkbox" checked>
+            <span>I'm a student looking for long-term stay</span>
+        </label>
+
+    </div>
+</section>
+
+<!-- STATS SECTION -->
+<section class="stats-section">
+    <div class="stat-card">
+        <i class="bi bi-building"></i>
+        <strong>200+</strong>
+        <span>Listed Hostels</span>
+    </div>
+    <div class="stat-card">
+        <i class="bi bi-people"></i>
+        <strong>1,000+</strong>
+        <span>Happy Students</span>
+    </div>
+    <div class="stat-card">
+        <i class="bi bi-geo-alt"></i>
+        <strong>15</strong>
+        <span>Cities Covered</span>
+    </div>
+</section>
+
+<!-- FEATURED HOSTELS SECTION -->
+<section class="section-wrap" id="featured">
+    <div class="section-heading d-flex justify-content-between align-items-end">
+        <div>
+            <p>Handpicked for you</p>
+            <h2>Featured Hostels</h2>
+        </div>
+        <a href="#" style="color:#f59e0b;font-weight:800;text-decoration:none;">
+            View all <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    {% if featured_hostels %}
+    <div class="hostel-scroll">
+        {% for hostel in featured_hostels %}
+        <div class="featured-card">
+
+            {% if hostel.images.first %}
+            <img src="{{ hostel.images.first.image.url }}" alt="{{ hostel.name }}">
+            {% else %}
+            <img src="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?w=600&q=80" alt="Hostel image">
+            {% endif %}
+
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                    <h3>{{ hostel.name }}</h3>
+                    <span style="background:#f59e0b;color:#17120a;font-size:0.75rem;
+                                 font-weight:800;padding:4px 10px;border-radius:999px;
+                                 white-space:nowrap;margin-left:10px;">
+                        {{ hostel.get_hostel_type_display }}
+                    </span>
+                </div>
+
+                <p class="location">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {{ hostel.city }}{% if hostel.address %}, {{ hostel.address|truncatewords:4 }}{% endif %}
+                </p>
+
+                <div class="amenities">
+                    {% if hostel.has_wifi %}
+                    <span><i class="bi bi-wifi"></i> WiFi</span>
+                    {% endif %}
+                    {% if hostel.has_parking %}
+                    <span><i class="bi bi-p-circle"></i> Parking</span>
+                    {% endif %}
+                    {% if hostel.has_laundry %}
+                    <span><i class="bi bi-water"></i> Laundry</span>
+                    {% endif %}
+                    {% if hostel.has_hot_water %}
+                    <span><i class="bi bi-droplet"></i> Hot Water</span>
+                    {% endif %}
+                    {% if hostel.has_cctv %}
+                    <span><i class="bi bi-camera-video"></i> CCTV</span>
+                    {% endif %}
+                    {% if hostel.has_kitchen %}
+                    <span><i class="bi bi-cup-hot"></i> Kitchen</span>
+                    {% endif %}
+                </div>
+
+                <div class="card-footer">
+                    <strong>NPR {{ hostel.price_per_month }}<small
+                            style="color:#a7a7a7;font-size:0.82rem;font-weight:500;">/month</small></strong>
+                    <a href="#">View Details</a>
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div style="text-align:center;padding:70px 0;">
+        <i class="bi bi-building-slash" style="font-size:3rem;color:#3a3a3a;"></i>
+        <p style="color:#6b6b6b;margin-top:16px;font-size:1.1rem;">
+            No hostels listed yet. Check back soon!
+        </p>
+        {% if user.is_authenticated and user.role == 'owner' %}
+        <a href="{% url 'owner_dashboard' %}" style="background:#f59e0b;color:#17120a;font-weight:800;
+                      padding:12px 28px;border-radius:6px;text-decoration:none;
+                      display:inline-block;margin-top:16px;">
+            List Your Hostel
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+</section>
+
+<!-- HOW IT WORKS SECTION -->
+<section class="how-section" id="how-it-works">
+    <div style="max-width:1240px;margin:0 auto;padding:70px clamp(20px,6vw,90px);">
+
+        <div class="section-heading">
+            <p>Simple process</p>
+            <h2>How It Works</h2>
+        </div>
+
+        <div class="steps-grid">
+            <div class="step-card">
+                <span>1</span>
+                <h3>Search</h3>
+                <p>Filter hostels by location, price range, hostel type and amenities to find exactly what you need.</p>
+            </div>
+            <div class="step-card">
+                <span>2</span>
+                <h3>Compare & Visit</h3>
+                <p>View hostel details, photos, and facilities. Contact the owner and visit before deciding.</p>
+            </div>
+            <div class="step-card">
+                <span>3</span>
+                <h3>Book</h3>
+                <p>Send a booking request directly to the owner. Get approved and move into your new home.</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- WHY CHOOSE US SECTION -->
+<section class="section-wrap">
+    <div class="section-heading text-center" style="margin-bottom:40px;">
+        <p>Our advantages</p>
+        <h2>Why Choose HostelHub?</h2>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:22px;">
+
+        <div class="stat-card" style="text-align:center;">
+            <i class="bi bi-patch-check" style="font-size:2rem;color:#f59e0b;display:block;margin-bottom:14px;"></i>
+            <strong style="font-size:1.1rem;margin-bottom:6px;display:block;">Verified Listings</strong>
+            <span>Every hostel is reviewed and approved by our admin team before going live.</span>
+        </div>
+
+        <div class="stat-card" style="text-align:center;">
+            <i class="bi bi-currency-dollar" style="font-size:2rem;color:#f59e0b;display:block;margin-bottom:14px;"></i>
+            <strong style="font-size:1.1rem;margin-bottom:6px;display:block;">Zero Commission</strong>
+            <span>We charge no commission. Connect directly with hostel owners for the best deals.</span>
+        </div>
+
+        <div class="stat-card" style="text-align:center;">
+            <i class="bi bi-chat-dots" style="font-size:2rem;color:#f59e0b;display:block;margin-bottom:14px;"></i>
+            <strong style="font-size:1.1rem;margin-bottom:6px;display:block;">Direct Contact</strong>
+            <span>Message owners directly. No middlemen, no delays, no hidden fees.</span>
+        </div>
+
+        <div class="stat-card" style="text-align:center;">
+            <i class="bi bi-shield-check" style="font-size:2rem;color:#f59e0b;display:block;margin-bottom:14px;"></i>
+            <strong style="font-size:1.1rem;margin-bottom:6px;display:block;">Secure Booking</strong>
+            <span>Your booking requests and personal data are always safe and secure.</span>
+        </div>
+
+    </div>
+</section>
+
+<!-- CTA SECTION -->
+<section style="background:#1a1a1a;margin-top:70px;padding:70px clamp(20px,6vw,90px);text-align:center;">
+    <p style="color:#f59e0b;font-weight:800;text-transform:uppercase;margin-bottom:12px;">Are you a hostel owner?</p>
+    <h2 style="color:#ffffff;font-size:clamp(2rem,4vw,3rem);font-weight:800;margin-bottom:16px;">
+        List Your Hostel on HostelHub
+    </h2>
+    <p style="color:#a7a7a7;max-width:520px;margin:0 auto 32px;line-height:1.7;">
+        Join hundreds of hostel owners already listing on HostelHub.
+        Reach thousands of students looking for accommodation across Nepal.
+    </p>
+    <a href="{% url 'register_owner' %}" style="background:#f59e0b;color:#17120a;font-weight:800;
+              padding:16px 40px;border-radius:6px;text-decoration:none;
+              display:inline-block;font-size:1.05rem;">
+        <i class="bi bi-building-add me-2"></i> List Your Hostel
+    </a>
+</section>
+
+<!-- FOOTER -->
+<footer class="home-footer">
+    <div>
+        <a href="{% url 'home' %}" style="color:#ffffff;font-size:1.25rem;font-weight:800;text-decoration:none;">
+            <i class="bi bi-building" style="color:#f59e0b;"></i> HostelHub
+        </a>
+        <p>Nepal's trusted student hostel finder and management platform.</p>
+    </div>
+    <div style="display:flex;gap:24px;flex-wrap:wrap;">
+        <a href="{% url 'home' %}" style="color:#a7a7a7;text-decoration:none;font-weight:600;">Home</a>
+        <a href="#featured" style="color:#a7a7a7;text-decoration:none;font-weight:600;">Hostels</a>
+        <a href="#how-it-works" style="color:#a7a7a7;text-decoration:none;font-weight:600;">How it works</a>
+        <a href="{% url 'login' %}" style="color:#a7a7a7;text-decoration:none;font-weight:600;">Login</a>
+        <a href="{% url 'register_owner' %}" style="color:#a7a7a7;text-decoration:none;font-weight:600;">List Hostel</a>
+    </div>
+    <span>&copy; 2025 HostelHub. All rights reserved.</span>
+</footer>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - HostelHub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+
+<body class="auth-page">
+    <main class="auth-shell">
+        <section class="auth-media">
+            <a class="auth-brand" href="{% url 'home' %}">
+                <i class="bi bi-building"></i>
+                <span>HostelHub</span>
+            </a>
+            <div>
+                <p class="eyebrow">Welcome back</p>
+                <h1>Continue finding hostels that feel like home.</h1>
+                <p>Compare verified student stays, save favorites, and manage your bookings from one clean dashboard.</p>
+            </div>
+        </section>
+
+        <section class="auth-panel">
+            <div class="auth-card-dark">
+                <a class="auth-back" href="{% url 'home' %}">
+                    <i class="bi bi-arrow-left"></i>
+                    Home
+                </a>
+                <h2>Login</h2>
+                <p class="auth-subtitle">Enter your account details to access HostelHub.</p>
+
+                {% if messages %}
+                <div class="auth-messages">
+                    {% for message in messages %}
+                    <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form method="POST" class="auth-form">
+                    {% csrf_token %}
+                    <label>
+                        <span>Username</span>
+                        <div class="auth-input">
+                            <i class="bi bi-person"></i>
+                            <input type="text" name="username" placeholder="Enter your username" required>
+                        </div>
+                    </label>
+
+                    <label>
+                        <span>Password</span>
+                        <div class="auth-input">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" name="password" id="password" placeholder="Enter your password"
+                                required>
+                            <button type="button" class="password-toggle" data-target="password">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </label>
+
+                    <button type="submit" class="auth-submit">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Login
+                    </button>
+                </form>
+
+                <div class="auth-switch">
+                    <span>New here?</span>
+                    <a href="{% url 'register_student' %}">Create student account</a>
+                    <a href="{% url 'register_owner' %}">Register as owner</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.querySelectorAll('.password-toggle').forEach((button) => {
+            button.addEventListener('click', () => {
+                const input = document.getElementById(button.dataset.target);
+                const icon = button.querySelector('i');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                icon.classList.toggle('bi-eye');
+                icon.classList.toggle('bi-eye-slash');
+            });
+        });
+    </script>
+</body>
+
+</html>
