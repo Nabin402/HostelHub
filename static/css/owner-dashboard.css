@@ -426,3 +426,33 @@
             grid-template-columns: 1fr;
         }
     }
+    /* Add these to owner-dashboard.css */
+
+.toggle-availability-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.2s;
+}
+
+.toggle-availability-btn:hover {
+    opacity: 0.8;
+    text-decoration: none;
+}
+
+.toggle-available {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid #22c55e;
+}
+
+.toggle-full {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid #ef4444;
+}

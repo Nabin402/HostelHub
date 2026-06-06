@@ -35,4 +35,8 @@ urlpatterns = [
          views.approve_hostel, name='approve_hostel'),
     path('admin-panel/hostels/<int:hostel_id>/reject/',
          views.reject_hostel, name='reject_hostel'),
+    path('admin/delete-user/<int:user_id>/',
+         views.admin_delete_user, name='admin_delete_user'),
+    path('admin/delete-hostel/<int:hostel_id>/',
+         views.admin_delete_hostel, name='admin_delete_hostel'),
 ]

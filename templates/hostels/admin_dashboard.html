@@ -42,6 +42,15 @@
             </div>
         </div>
     </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-calendar-check fs-2 text-secondary"></i>
+                <h4 class="mt-2 mb-0">{{ total_bookings }}</h4>
+                <small class="text-muted">Total Bookings</small>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Pending Hostels -->
@@ -106,6 +115,67 @@
     </div>
 </div>
 
+<!-- All Hostels -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-building me-2"></i>All Hostels</h5>
+        <span class="badge bg-primary">{{ total_hostels }}</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Owner</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Available</th>
+                        <th>Price/mo</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hostel in all_hostels %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'hostel_detail' hostel.id %}" class="fw-semibold text-decoration-none">
+                                {{ hostel.name }}
+                            </a>
+                        </td>
+                        <td>{{ hostel.owner.username }}</td>
+                        <td>{{ hostel.city }}</td>
+                        <td>
+                            {% if hostel.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                            {% elif hostel.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if hostel.is_available %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td>Rs. {{ hostel.price_per_month }}</td>
+                        <td>
+                            <a href="{% url 'admin_delete_hostel' hostel.id %}" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Delete {{ hostel.name }}? This cannot be undone.')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <!-- All Users -->
 <div class="card mb-4">
     <div class="card-header">
@@ -122,70 +192,36 @@
                         <th>Phone</th>
                         <th>Email Verified</th>
                         <th>Joined</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for user in all_users %}
+                    {% for u in all_users %}
                     <tr>
-                        <td class="fw-semibold">{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
+                        <td class="fw-semibold">{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
                         <td>
-                            {% if user.role == 'student' %}
+                            {% if u.role == 'student' %}
                             <span class="badge bg-primary">Student</span>
-                            {% elif user.role == 'owner' %}
+                            {% elif u.role == 'owner' %}
                             <span class="badge bg-info text-dark">Owner</span>
                             {% endif %}
                         </td>
-                        <td>{{ user.phone|default:"—" }}</td>
+                        <td>{{ u.phone|default:"—" }}</td>
                         <td>
-                            {% if user.is_email_verified %}
+                            {% if u.is_email_verified %}
                             <i class="bi bi-check-circle-fill text-success"></i>
                             {% else %}
                             <i class="bi bi-x-circle-fill text-danger"></i>
                             {% endif %}
                         </td>
-                        <td><small class="text-muted">{{ user.date_joined|date:"M d, Y" }}</small></td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Recent Hostels -->
-<div class="card">
-    <div class="card-header">
-        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recently Added Hostels</h5>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Hostel</th>
-                        <th>Owner</th>
-                        <th>City</th>
-                        <th>Status</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for hostel in recent_hostels %}
-                    <tr>
-                        <td class="fw-semibold">{{ hostel.name }}</td>
-                        <td>{{ hostel.owner.username }}</td>
-                        <td>{{ hostel.city }}</td>
+                        <td><small class="text-muted">{{ u.date_joined|date:"M d, Y" }}</small></td>
                         <td>
-                            {% if hostel.status == 'approved' %}
-                            <span class="badge bg-success">Approved</span>
-                            {% elif hostel.status == 'pending' %}
-                            <span class="badge bg-warning text-dark">Pending</span>
-                            {% else %}
-                            <span class="badge bg-danger">Rejected</span>
-                            {% endif %}
+                            <a href="{% url 'admin_delete_user' u.id %}" class="btn btn-danger btn-sm"
+                                onclick="return confirm('Delete {{ u.username }}? This cannot be undone.')">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
                         </td>
-                        <td><small class="text-muted">{{ hostel.created_at|date:"M d, Y" }}</small></td>
                     </tr>
                     {% endfor %}
                 </tbody>

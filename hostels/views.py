@@ -16,7 +16,7 @@ class HomeView(View):
     template_name = 'home.html'
 
     def get(self, request):
-        hostels = Hostel.objects.filter(status='approved')
+        hostels = Hostel.objects.filter(status='approved',is_available=True)
 
         location = request.GET.get('location', '').strip()
         hostel_type = request.GET.get('hostel_type', '').strip()
@@ -336,4 +336,48 @@ def reject_hostel(request, hostel_id):
     hostel.status = 'rejected'
     hostel.save()
     messages.warning(request, f'"{hostel.name}" rejected.')
+    return redirect('admin_dashboard')
+
+
+@login_required
+def admin_dashboard(request):
+    if request.user.role != 'admin':
+        messages.error(request, 'Access denied.')
+        return redirect('home')
+
+    from users.models import CustomUser
+    from bookings.models import Booking
+
+    context = {
+        'total_hostels': Hostel.objects.count(),
+        'total_bookings': Booking.objects.count(),
+        'pending_hostels': Hostel.objects.filter(status='pending'),
+        'approved_count': Hostel.objects.filter(status='approved').count(),
+        'rejected_count': Hostel.objects.filter(status='rejected').count(),
+        'total_students': CustomUser.objects.filter(role='student').count(),
+        'total_owners': CustomUser.objects.filter(role='owner').count(),
+        'all_users': CustomUser.objects.exclude(role='admin').order_by('-date_joined'),
+        'all_hostels': Hostel.objects.all().select_related('owner').order_by('-created_at'),
+    }
+    return render(request, 'hostels/admin_dashboard.html', context)
+
+
+@login_required
+def admin_delete_user(request, user_id):
+    if request.user.role != 'admin':
+        return redirect('home')
+    from users.models import CustomUser
+    user = get_object_or_404(CustomUser, id=user_id)
+    user.delete()
+    messages.success(request, f'User "{user.username}" deleted.')
+    return redirect('admin_dashboard')
+
+
+@login_required
+def admin_delete_hostel(request, hostel_id):
+    if request.user.role != 'admin':
+        return redirect('home')
+    hostel = get_object_or_404(Hostel, id=hostel_id)
+    hostel.delete()
+    messages.success(request, f'Hostel "{hostel.name}" deleted.')
     return redirect('admin_dashboard')

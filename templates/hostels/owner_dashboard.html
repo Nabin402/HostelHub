@@ -9,7 +9,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/owner-dashboard.css' %}">
 
-
 <div class="owner-dashboard">
     <aside class="owner-sidebar">
         <div class="owner-avatar">{{ user.username|first|upper }}</div>
@@ -41,6 +40,7 @@
             <p>{% now "l, F j, Y" %}</p>
         </div>
 
+        <!-- Stats -->
         <section class="stats-grid" aria-label="Owner dashboard stats">
             <article class="dash-card">
                 <i class="bi bi-building"></i>
@@ -64,6 +64,7 @@
             </article>
         </section>
 
+        <!-- My Hostels -->
         <section id="my-hostels">
             <div class="section-header">
                 <h2 class="section-title">My Hostels</h2>
@@ -88,26 +89,56 @@
                                 <th>Type</th>
                                 <th>Price</th>
                                 <th>Rooms</th>
-                                <th>Status</th>
+                                <th>Approval</th>
+                                <th>Availability</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for hostel in hostels %}
                             <tr>
-                                <td>{{ hostel.name }}</td>
+                                <td>
+                                    <a href="{% url 'hostel_detail' hostel.id %}"
+                                        class="text-white fw-semibold text-decoration-none">
+                                        {{ hostel.name }}
+                                    </a>
+                                </td>
                                 <td>{{ hostel.city }}</td>
                                 <td>{{ hostel.get_hostel_type_display }}</td>
-                                <td>Rs. {{ hostel.price_per_month }}</td>
+                                <td>NPR {{ hostel.price_per_month }}</td>
                                 <td>{{ hostel.available_rooms }}/{{ hostel.total_rooms }}</td>
-                                <td><span class="status-badge status-{{ hostel.status }}">{{ hostel.get_status_display
-                                        }}</span></td>
+
+                                <!-- Approval status -->
+                                <td>
+                                    <span class="status-badge status-{{ hostel.status }}">
+                                        {% if hostel.status == 'approved' %}Approved
+                                        {% elif hostel.status == 'pending' %}Pending
+                                        {% else %}Rejected
+                                        {% endif %}
+                                    </span>
+                                </td>
+
+                                <!-- Availability toggle -->
+                                <td>
+                                    <a href="{% url 'toggle_availability' hostel.id %}"
+                                        class="toggle-availability-btn {% if hostel.is_available %}toggle-available{% else %}toggle-full{% endif %}"
+                                        title="Click to toggle">
+                                        {% if hostel.is_available %}
+                                        <i class="bi bi-toggle-on"></i> Available
+                                        {% else %}
+                                        <i class="bi bi-toggle-off"></i> Full
+                                        {% endif %}
+                                    </a>
+                                </td>
+
                                 <td>
                                     <div class="action-row">
                                         <a class="outline-amber" href="{% url 'edit_hostel' hostel.id %}">Edit</a>
-                                        <form method="POST" action="{% url 'delete_hostel' hostel.id %}">
+                                        <form method="POST" action="{% url 'delete_hostel' hostel.id %}"
+                                            style="display:inline;">
                                             {% csrf_token %}
-                                            <button class="outline-red" type="submit">Delete</button>
+                                            <button class="outline-red" type="submit"
+                                                onclick="return confirm('Delete {{ hostel.name }}?')">Delete</button>
                                         </form>
                                     </div>
                                 </td>
@@ -120,6 +151,7 @@
             </div>
         </section>
 
+        <!-- Booking Requests -->
         <section id="booking-requests">
             <div class="section-header">
                 <h2 class="section-title">Recent Booking Requests</h2>
@@ -152,8 +184,14 @@
                                 <td>{{ booking.hostel.name }}</td>
                                 <td>{{ booking.move_in_date }}</td>
                                 <td>{{ booking.message|default:"No message"|truncatechars:42 }}</td>
-                                <td><span class="status-badge status-{{ booking.status }}">{{ booking.get_status_display
-                                        }}</span></td>
+                                <td>
+                                    <span class="status-badge status-{{ booking.status }}">
+                                        {% if booking.status == 'pending' %}Pending
+                                        {% elif booking.status == 'approved' %}Approved
+                                        {% else %}Rejected
+                                        {% endif %}
+                                    </span>
+                                </td>
                                 <td>
                                     {% if booking.status == 'pending' %}
                                     <div class="action-row">
@@ -179,11 +217,11 @@
             </div>
         </section>
 
+        <!-- Quick Actions -->
         <section>
             <div class="section-header">
                 <h2 class="section-title">Quick Actions</h2>
             </div>
-
             <div class="quick-grid">
                 <article class="quick-card">
                     <i class="bi bi-building-add"></i>
@@ -205,6 +243,7 @@
                 </article>
             </div>
         </section>
+
     </main>
 </div>
 

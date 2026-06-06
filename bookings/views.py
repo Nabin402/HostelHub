@@ -68,3 +68,13 @@ def cancel_booking(request, booking_id):
         messages.error(request, 'Only pending bookings can be cancelled.')
 
     return redirect('my_bookings')
+
+
+@login_required
+def mark_notification_read(request, notification_id):
+    from .models import Notification
+    notification = get_object_or_404(
+        Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect(request.META.get('HTTP_REFERER', 'home'))
