@@ -13,6 +13,11 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://hostelhub-production-83ac.up.railway.app',
+    os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',')[0] if os.getenv('CSRF_TRUSTED_ORIGINS') else 'http://localhost:8000'
+]
+
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
