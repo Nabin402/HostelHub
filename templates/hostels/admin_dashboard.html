@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Panel - HostelHub{% endblock %}
+
+{% block content %}
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-building fs-2 text-primary"></i>
+                <h4 class="mt-2 mb-0">{{ total_hostels }}</h4>
+                <small class="text-muted">Total Hostels</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-hourglass-split fs-2 text-warning"></i>
+                <h4 class="mt-2 mb-0">{{ pending_hostels.count }}</h4>
+                <small class="text-muted">Pending Approval</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-mortarboard fs-2 text-success"></i>
+                <h4 class="mt-2 mb-0">{{ total_students }}</h4>
+                <small class="text-muted">Students</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6">
+        <div class="card text-center">
+            <div class="card-body">
+                <i class="bi bi-people fs-2 text-info"></i>
+                <h4 class="mt-2 mb-0">{{ total_owners }}</h4>
+                <small class="text-muted">Owners</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Hostels -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-hourglass-split me-2 text-warning"></i>Pending Approval</h5>
+        <span class="badge bg-warning text-dark">{{ pending_hostels.count }}</span>
+    </div>
+    <div class="card-body p-0">
+        {% if pending_hostels %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Owner</th>
+                        <th>City</th>
+                        <th>Type</th>
+                        <th>Room</th>
+                        <th>Price/mo</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hostel in pending_hostels %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'hostel_detail' hostel.id %}" class="fw-semibold text-decoration-none">
+                                {{ hostel.name }}
+                            </a>
+                        </td>
+                        <td>{{ hostel.owner.username }}</td>
+                        <td>{{ hostel.city }}</td>
+                        <td><span class="badge bg-secondary">{{ hostel.get_hostel_type_display }}</span></td>
+                        <td><span class="badge bg-light text-dark border">{{ hostel.get_room_type_display }}</span></td>
+                        <td>Rs. {{ hostel.price_per_month }}</td>
+                        <td><small class="text-muted">{{ hostel.created_at|date:"M d, Y" }}</small></td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{% url 'approve_hostel' hostel.id %}" class="btn btn-success btn-sm"
+                                    onclick="return confirm('Approve {{ hostel.name }}?')">
+                                    <i class="bi bi-check-lg"></i> Approve
+                                </a>
+                                <a href="{% url 'reject_hostel' hostel.id %}" class="btn btn-danger btn-sm"
+                                    onclick="return confirm('Reject {{ hostel.name }}?')">
+                                    <i class="bi bi-x-lg"></i> Reject
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+            <i class="bi bi-check-circle fs-2 text-success"></i>
+            <p class="mt-2 mb-0">No pending hostels — all caught up!</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- All Users -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-people me-2"></i>All Users</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Phone</th>
+                        <th>Email Verified</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in all_users %}
+                    <tr>
+                        <td class="fw-semibold">{{ user.username }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.role == 'student' %}
+                            <span class="badge bg-primary">Student</span>
+                            {% elif user.role == 'owner' %}
+                            <span class="badge bg-info text-dark">Owner</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ user.phone|default:"—" }}</td>
+                        <td>
+                            {% if user.is_email_verified %}
+                            <i class="bi bi-check-circle-fill text-success"></i>
+                            {% else %}
+                            <i class="bi bi-x-circle-fill text-danger"></i>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ user.date_joined|date:"M d, Y" }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Hostels -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Recently Added Hostels</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Hostel</th>
+                        <th>Owner</th>
+                        <th>City</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hostel in recent_hostels %}
+                    <tr>
+                        <td class="fw-semibold">{{ hostel.name }}</td>
+                        <td>{{ hostel.owner.username }}</td>
+                        <td>{{ hostel.city }}</td>
+                        <td>
+                            {% if hostel.status == 'approved' %}
+                            <span class="badge bg-success">Approved</span>
+                            {% elif hostel.status == 'pending' %}
+                            <span class="badge bg-warning text-dark">Pending</span>
+                            {% else %}
+                            <span class="badge bg-danger">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td><small class="text-muted">{{ hostel.created_at|date:"M d, Y" }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

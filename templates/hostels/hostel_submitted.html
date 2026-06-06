@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Hostel Submitted - HostelHub{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7 text-center py-5">
+
+        <div class="mb-4">
+            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
+        </div>
+
+        <h2 class="mb-3">Hostel Submitted Successfully!</h2>
+        <p class="text-muted mb-4">
+            Your hostel has been submitted and is now <strong>pending review</strong> by our admin team.
+            You'll be notified once it's approved and goes live on HostelHub.
+        </p>
+
+        <div class="card text-start mb-4">
+            <div class="card-body">
+                <h6 class="card-title mb-3"><i class="bi bi-info-circle me-2"></i>What happens next?</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2"><i class="bi bi-1-circle text-primary me-2"></i>Admin reviews your hostel details and images</li>
+                    <li class="mb-2"><i class="bi bi-2-circle text-primary me-2"></i>You receive an approval or rejection notification</li>
+                    <li class="mb-2"><i class="bi bi-3-circle text-primary me-2"></i>Once approved, students can find and book your hostel</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-center">
+            <a href="{% url 'owner_dashboard' %}" class="btn btn-primary">
+                <i class="bi bi-speedometer2 me-2"></i>Go to Dashboard
+            </a>
+            <a href="{% url 'add_hostel' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-building-add me-2"></i>Add Another Hostel
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

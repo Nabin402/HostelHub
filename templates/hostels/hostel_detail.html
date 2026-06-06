@@ -1,0 +1,446 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ hostel.name }} - HostelHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/hostel_detail.css' %}">
+<!-- Leaflet CSS for map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+
+        <!-- ── LEFT COLUMN ── -->
+        <div class="col-lg-8">
+
+            <!-- Image Carousel -->
+            {% if images %}
+            <div id="hostelCarousel" class="carousel slide hostel-hero" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in images %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ hostel.name }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if images|length > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#hostelCarousel"
+                    data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#hostelCarousel"
+                    data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+                {% endif %}
+            </div>
+
+            <!-- Thumbnail Strip -->
+            {% if images|length > 1 %}
+            <div class="thumb-strip">
+                {% for image in images %}
+                <img src="{{ image.image.url }}" class="{% if forloop.first %}active{% endif %}" alt="thumb"
+                    onclick="goToSlide({{ forloop.counter0 }}, this)">
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% else %}
+            <div class="hostel-hero bg-light d-flex align-items-center justify-content-center mb-4"
+                style="height:320px;">
+                <i class="bi bi-building text-muted" style="font-size:4rem;"></i>
+            </div>
+            {% endif %}
+
+            <!-- Title + Badges + Availability -->
+            <div class="d-flex align-items-start justify-content-between mb-3">
+                <div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                        <h2 class="hostel-title mb-0">{{ hostel.name }}</h2>
+                        {% if hostel.is_available %}
+                        <span class="badge bg-success">Available</span>
+                        {% else %}
+                        <span class="badge bg-danger">Fully Booked</span>
+                        {% endif %}
+                    </div>
+                    <p class="hostel-location mb-0">
+                        <i class="bi bi-geo-alt-fill me-1 text-danger"></i>{{ hostel.address }}, {{ hostel.city }}
+                    </p>
+                    {% if hostel.nearby_landmarks %}
+                    <p class="text-muted small mt-1 mb-0">
+                        <i class="bi bi-signpost me-1"></i>{{ hostel.nearby_landmarks }}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="d-flex flex-column gap-2 align-items-end">
+                    <span class="badge bg-primary px-3 py-2">{{ hostel.get_hostel_type_display }}</span>
+                    <span class="badge bg-secondary px-3 py-2">{{ hostel.get_room_type_display }}</span>
+                </div>
+            </div>
+
+            <!-- Rating summary -->
+            {% if hostel.review_count > 0 %}
+            <div class="d-flex align-items-center gap-2 mb-4">
+                <div class="star-display">
+                    {% for i in "12345" %}
+                    <i
+                        class="bi bi-star{% if forloop.counter <= hostel.average_rating %}-fill text-warning{% else %} text-muted{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <span class="fw-semibold">{{ hostel.average_rating }}</span>
+                <span class="text-muted small">({{ hostel.review_count }} review{{ hostel.review_count|pluralize
+                    }})</span>
+            </div>
+            {% endif %}
+
+            <!-- Owner toggle (only visible to the hostel owner) -->
+            {% if user.is_authenticated and user == hostel.owner %}
+            <div class="alert alert-light border d-flex align-items-center justify-content-between mb-4">
+                <span>
+                    <i class="bi bi-toggle-on me-2 text-primary"></i>
+                    Availability status:
+                    <strong>{% if hostel.is_available %}Available{% else %}Fully Booked{% endif %}</strong>
+                </span>
+                <a href="{% url 'toggle_availability' hostel.id %}"
+                    class="btn btn-sm {% if hostel.is_available %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                    {% if hostel.is_available %}Mark as Full{% else %}Mark as Available{% endif %}
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- About -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle-fill me-2 text-primary"></i>About this Hostel</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-muted" style="line-height:1.8;">{{ hostel.description }}</p>
+                </div>
+            </div>
+
+            <!-- Amenities -->
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-stars me-2 text-warning"></i>Amenities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4 col-6">
+                            <div class="amenity-item {% if hostel.has_wifi %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-wifi"></i> WiFi
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_parking %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-p-square-fill"></i> Parking
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_laundry %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-bag-fill"></i> Laundry
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_hot_water %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-droplet-half"></i> Hot Water
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div class="amenity-item {% if hostel.has_cctv %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-camera-video-fill"></i> CCTV
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_kitchen %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-cup-hot-fill"></i> Kitchen
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_meals %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-egg-fried"></i> Meals Included
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_study_room %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-book"></i> Study Room
+                            </div>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <div
+                                class="amenity-item {% if hostel.has_power_backup %}available{% else %}unavailable{% endif %}">
+                                <i class="bi bi-lightning-fill"></i> Power Backup
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hostel Rules -->
+            {% if hostel.hostel_rules %}
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-shield-check me-2 text-danger"></i>Hostel Rules</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0 text-muted" style="line-height:1.8; white-space: pre-line;">{{ hostel.hostel_rules }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Map -->
+            {% if hostel.latitude and hostel.longitude %}
+            <div class="card info-card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-map-fill me-2 text-success"></i>Location</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div id="hostel-map" style="height: 300px; border-radius: 0 0 14px 14px;"></div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Reviews -->
+            <div class="card info-card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="mb-0"><i class="bi bi-star-fill me-2 text-warning"></i>Reviews</h5>
+                    {% if hostel.review_count > 0 %}
+                    <span class="badge bg-warning text-dark">{{ hostel.average_rating }} ★ · {{ hostel.review_count }}
+                        review{{ hostel.review_count|pluralize }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+
+                    <!-- Leave a review -->
+                    {% if user.is_authenticated and user.role == 'student' %}
+                    {% if has_reviewed %}
+                    <div class="alert alert-success small">
+                        <i class="bi bi-check-circle-fill me-1"></i> You have already reviewed this hostel.
+                    </div>
+                    {% elif review_form %}
+                    <div class="review-form-box mb-4">
+                        <h6 class="fw-semibold mb-3">Leave a Review</h6>
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_type" value="review">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Rating</label>
+                                <div class="star-picker">
+                                    {% for radio in review_form.rating %}
+                                    <label class="star-label">
+                                        {{ radio.tag }}
+                                        <i class="bi bi-star-fill"></i>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ review_form.comment }}
+                            </div>
+                            <button type="submit" class="btn btn-warning btn-sm fw-semibold">
+                                <i class="bi bi-send me-1"></i> Submit Review
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                    {% elif not user.is_authenticated %}
+                    <p class="text-muted small"><a href="{% url 'login' %}">Login</a> as a student to leave a review.
+                    </p>
+                    {% endif %}
+
+                    <!-- Review list -->
+                    {% if reviews %}
+                    <div class="review-list">
+                        {% for review in reviews %}
+                        <div class="review-item">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="review-avatar">{{ review.student.username|first|upper }}</div>
+                                    <span class="fw-semibold">{{ review.student.username }}</span>
+                                </div>
+                                <div class="review-stars">
+                                    {% for i in "12345" %}
+                                    <i
+                                        class="bi bi-star{% if forloop.counter <= review.rating %}-fill text-warning{% else %} text-muted{% endif %} small"></i>
+                                    {% endfor %}
+                                    <span class="text-muted small ms-1">{{ review.created_at|date:"M d, Y" }}</span>
+                                </div>
+                            </div>
+                            {% if review.comment %}
+                            <p class="mb-0 text-muted small" style="line-height:1.6;">{{ review.comment }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted small mb-0">No reviews yet. Be the first to review!</p>
+                    {% endif %}
+
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ── RIGHT COLUMN — Booking Card ── -->
+        <div class="col-lg-4">
+            <div class="card booking-card">
+
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-check me-2"></i>Book this Hostel</h5>
+                </div>
+
+                <div class="card-body px-4">
+
+                    <!-- Price -->
+                    <div class="price-display">
+                        <h3>NPR {{ hostel.price_per_month }}</h3>
+                        <small class="text-muted">per month</small>
+                        {% if hostel.admission_fee %}
+                        <div class="text-muted small mt-1">+ NPR {{ hostel.admission_fee }} admission fee</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Room Info -->
+                    <div class="info-row">
+                        <span class="text-muted">Room Type</span>
+                        <span class="fw-semibold">{{ hostel.get_room_type_display }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="text-muted">Available Rooms</span>
+                        <span
+                            class="fw-semibold {% if hostel.available_rooms == 0 %}text-danger{% else %}text-success{% endif %}">
+                            {% if hostel.available_rooms == 0 %}Full{% else %}{{ hostel.available_rooms }} left{% endif %}
+                        </span>
+                    </div>
+                    <div class="info-row">
+                        <span class="text-muted">Hostel Type</span>
+                        <span class="fw-semibold">{{ hostel.get_hostel_type_display }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="text-muted">Minimum Stay</span>
+                        <span class="fw-semibold">{{ hostel.get_minimum_stay_display }}</span>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <!-- Contact -->
+                    {% if hostel.contact_number %}
+                    <div class="contact-box mb-3">
+                        <i class="bi bi-telephone-fill text-success me-2"></i>
+                        <a href="tel:{{ hostel.contact_number }}" class="fw-semibold text-decoration-none">
+                            {{ hostel.contact_number }}
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <!-- Booking Actions -->
+                    <div class="mt-2">
+                        {% if user.is_authenticated %}
+                        {% if user.role == 'student' %}
+                        {% if not hostel.is_available or hostel.available_rooms == 0 %}
+                        <button class="btn btn-secondary w-100" disabled>
+                            <i class="bi bi-x-circle me-2"></i>No Rooms Available
+                        </button>
+                        {% elif has_booked %}
+                        <div class="alert alert-success text-center mb-2 small">
+                            <i class="bi bi-check-circle-fill me-2"></i>Booking Request Sent
+                        </div>
+                        <a href="{% url 'my_bookings' %}" class="btn btn-outline-primary w-100">
+                            View My Bookings
+                        </a>
+                        {% else %}
+                        <form method="post" action="{% url 'book_hostel' hostel.id %}">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Move-in Date <span
+                                        class="text-danger">*</span></label>
+                                <input type="date" name="move_in_date" class="form-control" required min="{{ today }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Message <small
+                                        class="text-muted fw-normal">(optional)</small></label>
+                                <textarea name="message" class="form-control" rows="3"
+                                    placeholder="Introduce yourself, mention your college..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-send-fill me-2"></i>Send Booking Request
+                            </button>
+                        </form>
+                        {% endif %}
+                        {% elif user.role == 'owner' %}
+                        <div class="alert alert-info text-center small mb-0">
+                            <i class="bi bi-info-circle me-1"></i>Owners cannot book hostels.
+                        </div>
+                        {% elif user.role == 'admin' %}
+                        <div class="alert alert-warning text-center small mb-0">
+                            <i class="bi bi-shield-check me-1"></i>Viewing as Admin.
+                        </div>
+                        {% endif %}
+                        {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-primary w-100 mb-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Login to Book
+                        </a>
+                        <p class="text-center text-muted small mb-0">
+                            No account? <a href="{% url 'register_student' %}">Register as Student</a>
+                        </p>
+                        {% endif %}
+                    </div>
+
+                </div>
+
+                <div class="card-footer">
+                    <i class="bi bi-person-circle me-2"></i>Listed by
+                    <strong class="text-primary">{{ hostel.owner.get_full_name|default:hostel.owner.username }}</strong>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+    // ── Thumbnail carousel sync ──
+    const carousel = document.getElementById('hostelCarousel');
+    if (carousel) {
+        carousel.addEventListener('slid.bs.carousel', function (e) {
+            document.querySelectorAll('.thumb-strip img').forEach((t, i) => {
+                t.classList.toggle('active', i === e.to);
+            });
+        });
+    }
+
+    function goToSlide(index, thumb) {
+        const c = bootstrap.Carousel.getOrCreateInstance(document.getElementById('hostelCarousel'));
+        c.to(index);
+        document.querySelectorAll('.thumb-strip img').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+    }
+
+    // ── Leaflet map ──
+    {% if hostel.latitude and hostel.longitude %}
+    const map = L.map('hostel-map').setView([{{ hostel.latitude }}, {{ hostel.longitude }}], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    L.marker([{{ hostel.latitude }}, {{ hostel.longitude }}])
+        .addTo(map)
+        .bindPopup('<strong>{{ hostel.name }}</strong><br>{{ hostel.address }}')
+        .openPopup();
+    {% endif %}
+</script>
+{% endblock %}

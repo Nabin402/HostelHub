@@ -1,0 +1,392 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add New Hostel - HostelHub{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+    #location-map {
+        height: 320px;
+        border-radius: 12px;
+        border: 2px solid #dee2e6;
+        cursor: crosshair;
+    }
+
+    #location-map.has-pin {
+        border-color: #0d6efd;
+    }
+
+    .map-search-box {
+        position: relative;
+    }
+
+    .map-hint {
+        background: #e8f4fd;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        color: #0369a1;
+        margin-bottom: 10px;
+    }
+
+    .coords-display {
+        background: #f0fdf4;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        color: #166534;
+        display: none;
+        margin-top: 8px;
+    }
+
+    .coords-display.visible {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+
+        <div class="d-flex align-items-center mb-4">
+            <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary btn-sm me-3">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+            <h2 class="mb-0"><i class="bi bi-building-add me-2"></i>Add New Hostel</h2>
+        </div>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            {% if form.errors %}
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please fix the errors below before submitting.
+            </div>
+            {% endif %}
+
+            <!-- Basic Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Hostel Name <span class="text-danger">*</span></label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Hostel Type <span class="text-danger">*</span></label>
+                            {{ form.hostel_type }}
+                            {% if form.hostel_type.errors %}<div class="text-danger small mt-1">{{
+                                form.hostel_type.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">City <span class="text-danger">*</span></label>
+                            {{ form.city }}
+                            {% if form.city.errors %}<div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label">Full Address <span class="text-danger">*</span></label>
+                            {{ form.address }}
+                            {% if form.address.errors %}<div class="text-danger small mt-1">{{ form.address.errors.0 }}
+                            </div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Number</label>
+                            {{ form.contact_number }}
+                            {% if form.contact_number.errors %}<div class="text-danger small mt-1">{{
+                                form.contact_number.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nearby Landmarks</label>
+                            {{ form.nearby_landmarks }}
+                            {% if form.nearby_landmarks.errors %}<div class="text-danger small mt-1">{{
+                                form.nearby_landmarks.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Description <span class="text-danger">*</span></label>
+                            {{ form.description }}
+                            {% if form.description.errors %}<div class="text-danger small mt-1">{{
+                                form.description.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Rooms -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-cash me-2"></i>Pricing & Rooms</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Room Type <span class="text-danger">*</span></label>
+                            <div class="d-flex flex-wrap gap-2 mt-1">
+                                {% for value, label in form.room_type.field.choices %}
+                                <div>
+                                    <input class="btn-check" type="radio" name="room_type" id="room_{{ value }}"
+                                        value="{{ value }}" {% if form.room_type.value == value %}checked{% endif %}>
+                                    <label class="btn btn-outline-primary" for="room_{{ value }}">{{ label }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.room_type.errors %}<div class="text-danger small mt-1">{{ form.room_type.errors.0
+                                }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Price/Month (NPR) <span class="text-danger">*</span></label>
+                            {{ form.price_per_month }}
+                            {% if form.price_per_month.errors %}<div class="text-danger small mt-1">{{
+                                form.price_per_month.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Admission Fee (NPR)</label>
+                            {{ form.admission_fee }}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Total Rooms <span class="text-danger">*</span></label>
+                            {{ form.total_rooms }}
+                            {% if form.total_rooms.errors %}<div class="text-danger small mt-1">{{
+                                form.total_rooms.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Available Rooms <span class="text-danger">*</span></label>
+                            {{ form.available_rooms }}
+                            {% if form.available_rooms.errors %}<div class="text-danger small mt-1">{{
+                                form.available_rooms.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Minimum Stay</label>
+                            {{ form.minimum_stay }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Currently Available?</label>
+                            <div class="form-check form-switch mt-2">
+                                {{ form.is_available }}
+                                <label class="form-check-label" for="{{ form.is_available.id_for_label }}">
+                                    Mark as available for booking
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amenities -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-stars me-2"></i>Amenities</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for field_name, icon, label in amenities %}
+                        <div class="col-md-4 col-6">
+                            <div class="form-check form-switch">
+                                {{ form|dictsort:field_name }}
+                                <label class="form-check-label" for="id_{{ field_name }}">
+                                    <i class="bi {{ icon }} me-1"></i> {{ label }}
+                                </label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hostel Rules -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>Hostel Rules <small
+                            class="text-muted fw-normal">(optional)</small></h5>
+                </div>
+                <div class="card-body">
+                    {{ form.hostel_rules }}
+                    <div class="form-text">e.g. No smoking, no guests after 9pm, quiet hours after 10pm</div>
+                </div>
+            </div>
+
+            <!-- Location Picker -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-map-fill me-2"></i>Pin Location on Map <small
+                            class="text-muted fw-normal">(optional but recommended)</small></h5>
+                </div>
+                <div class="card-body">
+                    <div class="map-hint">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Search your address below or click directly on the map to drop a pin. Coordinates will be saved
+                        automatically.
+                    </div>
+
+                    <!-- Search box -->
+                    <div class="input-group mb-3">
+                        <input type="text" id="map-search-input" class="form-control"
+                            placeholder="Search address e.g. Baneshwor, Kathmandu">
+                        <button class="btn btn-outline-primary" type="button" onclick="searchAddress()">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+
+                    <!-- Map -->
+                    <div id="location-map"></div>
+
+                    <!-- Coords feedback -->
+                    <div class="coords-display" id="coords-display">
+                        <i class="bi bi-pin-map-fill me-2"></i>
+                        Pin set at: <strong id="coords-text"></strong>
+                        <a href="#" class="ms-2 text-danger small" onclick="clearPin(event)">Remove pin</a>
+                    </div>
+
+                    <!-- Hidden fields -->
+                    {{ form.latitude }}
+                    {{ form.longitude }}
+                </div>
+            </div>
+
+            <!-- Images -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-images me-2"></i>Hostel Images</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Upload clear photos of your hostel. The first image will be the
+                        cover photo.</p>
+                    <input type="file" name="images" class="form-control" multiple accept="image/*" id="image-input">
+                    <div class="form-text mb-3">You can select multiple images at once (JPG, PNG, WebP).</div>
+                    <!-- Image preview strip -->
+                    <div id="image-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="d-flex gap-2 mb-5">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-send me-2"></i>Submit for Approval
+                </button>
+                <a href="{% url 'owner_dashboard' %}" class="btn btn-outline-secondary px-4">Cancel</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    // ── Map picker ──
+    const defaultLat = 27.7172;
+    const defaultLng = 85.3240;
+
+    const map = L.map('location-map').setView([defaultLat, defaultLng], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = null;
+
+    // Pre-fill if editing (lat/lng already set)
+    const existingLat = document.getElementById('id_latitude').value;
+    const existingLng = document.getElementById('id_longitude').value;
+    if (existingLat && existingLng) {
+        placePin(parseFloat(existingLat), parseFloat(existingLng));
+        map.setView([parseFloat(existingLat), parseFloat(existingLng)], 16);
+    }
+
+    map.on('click', function (e) {
+        placePin(e.latlng.lat, e.latlng.lng);
+    });
+
+    function placePin(lat, lng) {
+        if (marker) map.removeLayer(marker);
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        marker.on('dragend', function (e) {
+            const pos = e.target.getLatLng();
+            setCoords(pos.lat, pos.lng);
+        });
+        setCoords(lat, lng);
+        document.getElementById('location-map').classList.add('has-pin');
+    }
+
+    function setCoords(lat, lng) {
+        document.getElementById('id_latitude').value = lat.toFixed(6);
+        document.getElementById('id_longitude').value = lng.toFixed(6);
+        document.getElementById('coords-text').textContent = lat.toFixed(5) + ', ' + lng.toFixed(5);
+        document.getElementById('coords-display').classList.add('visible');
+    }
+
+    function clearPin(e) {
+        e.preventDefault();
+        if (marker) { map.removeLayer(marker); marker = null; }
+        document.getElementById('id_latitude').value = '';
+        document.getElementById('id_longitude').value = '';
+        document.getElementById('coords-display').classList.remove('visible');
+        document.getElementById('location-map').classList.remove('has-pin');
+    }
+
+    function searchAddress() {
+        const query = document.getElementById('map-search-input').value.trim();
+        if (!query) return;
+        fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    map.setView([lat, lng], 16);
+                    placePin(lat, lng);
+                } else {
+                    alert('Address not found. Try a more specific search or click on the map directly.');
+                }
+            })
+            .catch(() => alert('Search failed. Click on the map to place a pin manually.'));
+    }
+
+    // Allow Enter key in search box
+    document.getElementById('map-search-input').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); searchAddress(); }
+    });
+
+    // ── Image preview ──
+    document.getElementById('image-input').addEventListener('change', function () {
+        const preview = document.getElementById('image-preview');
+        preview.innerHTML = '';
+        Array.from(this.files).forEach((file, i) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const wrapper = document.createElement('div');
+                wrapper.style.cssText = 'position:relative;';
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.style.cssText = 'width:90px;height:70px;object-fit:cover;border-radius:8px;border:2px solid ' + (i === 0 ? '#0d6efd' : '#dee2e6');
+                img.title = i === 0 ? 'Cover photo' : file.name;
+                wrapper.appendChild(img);
+                if (i === 0) {
+                    const badge = document.createElement('span');
+                    badge.textContent = 'Cover';
+                    badge.style.cssText = 'position:absolute;bottom:4px;left:4px;background:#0d6efd;color:white;font-size:0.65rem;padding:1px 5px;border-radius:4px;';
+                    wrapper.appendChild(badge);
+                }
+                preview.appendChild(wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    // Hide the lat/lng fields visually (they're auto-filled by map)
+    document.getElementById('id_latitude').closest('.col-md-6') &&
+        (document.getElementById('id_latitude').type = 'hidden');
+    document.getElementById('id_longitude').closest('.col-md-6') &&
+        (document.getElementById('id_longitude').type = 'hidden');
+    document.getElementById('id_latitude').type = 'hidden';
+    document.getElementById('id_longitude').type = 'hidden';
+</script>
+{% endblock %}
